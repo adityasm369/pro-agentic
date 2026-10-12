@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pro Agentic</title>
+<link rel="icon" href="/favicon.svg">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#14161b;--muted:#646a76;--line:#e4e6ec;
+ --a1:#5b4ee5;--a2:#0f9488;--warn:#b45309;--bad:#c0392b;--good:#0f7a4d}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+ --bg:#0e1014;--card:#171a21;--ink:#e9eaee;--muted:#99a0b0;--line:#262b36}}
+:root[data-theme=dark]{--bg:#0e1014;--card:#171a21;--ink:#e9eaee;--muted:#99a0b0;--line:#262b36}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 90px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+h1{font-size:25px;letter-spacing:-.02em;margin:0}
+h1 b{color:var(--a1)}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 16px}
+nav{display:flex;gap:4px;margin:14px 0 18px;flex-wrap:wrap}
+nav button{font:inherit;font-size:14px;border:1px solid transparent;background:transparent;
+ color:var(--muted);padding:6px 13px;border-radius:99px;cursor:pointer}
+nav button.on{background:var(--card);border-color:var(--line);color:var(--ink);font-weight:600}
+nav button:hover{color:var(--ink)}
+.bar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:13px;color:var(--muted)}
+button.p{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;border:0;
+ padding:7px 14px;border-radius:9px;cursor:pointer;font:inherit;font-size:13.5px}
+button.g{background:var(--card);color:var(--ink);border:1px solid var(--line);
+ padding:6px 12px;border-radius:9px;cursor:pointer;font:inherit;font-size:13px}
+button.g:hover{border-color:var(--a1)}
+button:disabled{opacity:.5;cursor:default}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:11px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;
+ cursor:pointer;text-align:left;font:inherit;color:inherit;display:block;width:100%}
+.c:hover{border-color:var(--a1)}
+.c h3{margin:0 0 3px;font-size:15px;letter-spacing:-.01em}
+.c .n{font-size:27px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.c .meta{color:var(--muted);font-size:12.5px;margin-top:5px}
+.t{display:inline-block;font-size:11px;padding:1px 7px;border-radius:99px;border:1px solid var(--line);
+ color:var(--muted);margin-left:6px;vertical-align:2px}
+.t.up{color:var(--good);border-color:var(--good)}
+.t.new{color:#fff;background:var(--a1);border-color:var(--a1)}
+.t.down{color:var(--muted)}
+.t.ex{color:var(--a2);border-color:var(--a2)}
+.item{background:var(--card);border:1px solid var(--line);border-radius:11px;
+ padding:12px 14px;margin-bottom:8px}
+.item a{color:var(--ink);text-decoration:none;font-weight:600}
+.item a:hover{color:var(--a1)}
+.item .m{color:var(--muted);font-size:12.5px;margin-top:4px}
+.item .s{color:var(--muted);font-size:13.5px;margin-top:6px}
+.rel{display:inline-block;font-size:11px;padding:1px 7px;border-radius:99px;
+ background:color-mix(in srgb,var(--a2) 15%,transparent);color:var(--a2);font-weight:600}
+.exp{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;
+ margin-bottom:14px;white-space:pre-wrap;font-size:14.5px;line-height:1.65}
+.exp strong{color:var(--a1)}
+.empty{padding:44px 14px;text-align:center;color:var(--muted)}
+.back{background:none;border:0;color:var(--a1);cursor:pointer;font:inherit;padding:0;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.err{color:var(--bad)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);
+ color:var(--bg);padding:9px 16px;border-radius:9px;z-index:40;font-size:14px}
+</style></head><body>
+<div class="wrap">
+  <header>
+    <h1>Pro <b>Agentic</b></h1>
+    <span class="sub" id="stats" style="margin:0"></span>
+  </header>
+  <p class="sub">What the AI field is talking about, organised by concept rather than by clock.</p>
+  <nav>
+    <button data-v="library" class="on">Concepts</button>
+    <button data-v="emerging">Emerging</button>
+    <button data-v="recent">Recent</button>
+    <button data-v="sources">Sources</button>
+  </nav>
+  <div id="view"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let V="library", DAYS=30;
+// Every render is stamped. A view that finishes after a newer one started must
+// NOT paint: the first library() over 3600 items takes a moment, and without
+// this a click during that window showed the previous view's content, landing
+// the user on a page they did not ask for with no error to explain it.
+let SEQ = 0;
+const stamp = () => ++SEQ;
+const current = n => n === SEQ;
+function paint(n, html){ if(current(n)) $("#view").innerHTML = html; return current(n); }
+function toast(m){const t=document.createElement("div");t.className="toast";t.textContent=m;
+ document.body.appendChild(t);setTimeout(()=>t.remove(),2600);}
+async function api(p,b){try{const r=await fetch(p,b?{method:"POST",
+ headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}:{});
+ const j=await r.json(); if(j.ok===false&&j.error)toast(j.error); return j;}
+ catch(e){toast("request failed");return null;}}
+const ago=t=>{if(!t)return"";const d=(Date.now()/1000-t)/86400;
+ return d<1?"today":d<2?"yesterday":d<30?Math.round(d)+"d ago":Math.round(d/30)+"mo ago";};
+
+function setStats(s){ if(!s) return;
+  $("#stats").textContent = `${s.items.toLocaleString()} items · ${s.today} today · ${s.week} this week`
+    + ` · ${s.concepts} concepts · ${s.sources_ok} sources`
+    + (s.sources_bad?` · ${s.sources_bad} failing`:"")
+    + (s.last_ingest?` · pulled ${ago(s.last_ingest)}`:""); }
+
+async function library(){
+  const n = stamp();
+  const r = await api("/api/library?days="+DAYS); if(!r||!current(n)) return;
+  setStats(r.stats);
+  if(!paint(n, `<div class="bar">
+      <span>Activity over</span>
+      ${[7,30,90].map(d=>`<button class="g" data-d="${d}" ${d==DAYS?'style="border-color:var(--a1)"':''}>${d} days</button>`).join("")}
+      <span style="flex:1"></span><button class="p" id="pull">Pull sources</button></div>
+    <div class="grid">${r.concepts.map(c=>`
+      <button class="c" data-slug="${esc(c.slug)}">
+        <div class="n">${c.recent}<span class="t ${c.trend}">${c.trend}</span>
+          ${c.explained?'<span class="t ex">explained</span>':''}</div>
+        <h3>${esc(c.name)}</h3>
+        <div class="meta">${c.total} all time · ${c.sources} sources${c.last?" · "+ago(c.last):""}</div>
+      </button>`).join("")}</div>`)) return;
+  document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{DAYS=+b.dataset.d;library();});
+  document.querySelectorAll("[data-slug]").forEach(b=>b.onclick=()=>concept(b.dataset.slug));
+  $("#pull").onclick = async e => { e.target.disabled=true; e.target.textContent="pulling…";
+    const x = await api("/api/ingest",{}); if(x&&x.ok) toast(`+${x.added} new items`); library(); };
+}
+
+async function concept(slug){
+  const n = stamp();
+  const r = await api("/api/concept?slug="+encodeURIComponent(slug));
+  if(!r||!r.ok||!current(n)) return;
+  const c = r.concept;
+  if(!paint(n, `<button class="back" id="bk">← all concepts</button>
+    <h2 style="margin:0 0 2px">${esc(c.name)}</h2>
+    <p class="sub">${r.items.length} item(s) in the library mention this.</p>
+    <div class="bar"><button class="p" id="ex">${c.explainer?"Re-explain":"Explain this"}</button>
+      <span>${c.explainer?("written "+ago(c.explained_at)+" by "+esc(c.explain_model||"")):"grounded in the items below · a few cents"}</span></div>
+    <div id="expbox">${c.explainer?`<div class="exp">${md(c.explainer)}</div>`:""}</div>
+    ${r.items.map(it=>itemHTML(it)).join("") || '<div class="empty">Nothing yet.</div>'}`)) return;
+  $("#bk").onclick = library;
+  $("#ex").onclick = async e => { e.target.disabled=true; e.target.textContent="reading the items…";
+    const x = await api("/api/explain",{slug, force:!!c.explainer});
+    if(x&&x.ok){ $("#expbox").innerHTML = `<div class="exp">${md(x.explainer)}</div>`;
+      toast(x.cached?"from cache":`written by ${x.model} · $${(x.cost_usd||0).toFixed(4)}`); }
+    e.target.disabled=false; e.target.textContent="Re-explain"; };
+}
+
+function md(s){ return esc(s)
+  .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+  .replace(/`([^`]+)`/g,"<code>$1</code>"); }
+
+function itemHTML(it){
+  const when = it.published_at||it.first_seen;
+  return `<div class="item">
+    <a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a>
+    ${it.relevance>=25?`<span class="rel">your lane · ${esc((it.rel_terms||[]).slice(0,3).join(", "))}</span>`:""}
+    <div class="m">${esc(it.source||"")} · ${ago(when)}</div>
+    ${it.summary?`<div class="s">${esc(it.summary.slice(0,260))}${it.summary.length>260?"…":""}</div>`:""}
+  </div>`;
+}
+
+async function emerging(){
+  const n = stamp();
+  const r = await api("/api/emerging"); if(!r||!current(n)) return;
+  if(!paint(n, `<p class="sub">Terms appearing across <b>3 or more sources</b> in the last
+    three weeks that no concept covers yet. This is the field moving. Accept one and it joins the
+    library with every item that mentions it; reject it and it is not offered again.</p>
+    ${r.terms.length? r.terms.map(t=>`<div class="item">
+      <b style="font-size:16px">${esc(t.term)}</b>
+      <span class="t">${t.mentions} mentions</span><span class="t">${t.n_sources} sources</span>
+      <div class="m">first seen ${ago(t.first_seen)} · ${esc(t.sources.join(", "))}</div>
+      <div class="s">${t.examples.map(e=>"· "+esc(e.title)).join("<br>")}</div>
+      <div style="margin-top:9px;display:flex;gap:8px">
+        <button class="p" data-acc="${esc(t.term)}">Add to library</button>
+        <button class="g" data-rej="${esc(t.term)}">Not a concept</button>
+      </div></div>`).join("")
+      : '<div class="empty">Nothing is recurring across three sources yet. Pull the sources, or widen the window.</div>'}`)) return;
+  document.querySelectorAll("[data-acc]").forEach(b=>b.onclick=async()=>{
+    b.disabled=true; await api("/api/concept/accept",{term:b.dataset.acc}); toast("added"); emerging(); });
+  document.querySelectorAll("[data-rej]").forEach(b=>b.onclick=async()=>{
+    b.disabled=true; await api("/api/concept/reject",{term:b.dataset.rej}); emerging(); });
+}
+
+async function recent(){
+  const n = stamp();
+  const r = await api("/api/items?days=7&sort=relevance"); if(!r||!current(n)) return;
+  paint(n, `<p class="sub">Last 7 days, your lane first. Nothing is hidden —
+    items matching storage, security compliance or agentic work simply sort higher.</p>
+    ${r.items.map(itemHTML).join("") || '<div class="empty">Nothing in the last week.</div>'}`);
+}
+
+async function sources(){
+  const n = stamp();
+  const r = await api("/api/sources"); if(!r||!current(n)) return;
+  paint(n, `<p class="sub">Every item names its source. The list is editorial —
+    edit <code>sources.py</code> to change what you see.</p>
+    <table><thead><tr><th>Source</th><th>Kind</th><th>Items</th><th>Last ok</th><th>Status</th></tr></thead>
+    <tbody>${r.sources.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${esc(s.kind||"")}</td>
+      <td>${s.n_items}</td><td>${s.last_ok?ago(s.last_ok):"never"}</td>
+      <td class="${s.last_error?'err':''}">${esc(s.last_error||"ok")}</td></tr>`).join("")}</tbody></table>`);
+}
+
+const VIEWS={library,emerging,recent,sources};
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
+  V=b.dataset.v; VIEWS[V]();});
+library();
+</script></body></html>

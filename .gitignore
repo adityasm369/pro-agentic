@@ -1,0 +1,5 @@
+# The store is rebuilt by `python3 bin/ingest.py`; it is data, not source, and
+# it holds what he has read, saved and vouched for.
+data/
+__pycache__/
+*.pyc
