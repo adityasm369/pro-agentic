@@ -192,6 +192,18 @@ ck("...but not the item set", f1 != ex._fingerprint("x", ["a", "b", "c"]))
 src = open(os.path.join(os.path.dirname(HERE), "explain.py")).read()
 ck("the prompt forbids inventing facts", "never invent a fact" in src)
 ck("the prompt demands honesty when the items are thin", "say that plainly" in src)
+# The reader description is personal and this repo is public (spec 0001).
+ex.READER = os.path.join(_tmp, "absent-reader.md")
+ck("with no reader.md a generic default is used, not a crash",
+   "senior software engineer" in ex.system_prompt())
+with open(os.path.join(_tmp, "r.md"), "w") as fh:
+    fh.write("a bricklayer")
+ex.READER = os.path.join(_tmp, "r.md")
+ck("reader.md is read into the prompt", "a bricklayer" in ex.system_prompt())
+ck("...and the committed source names nobody",
+   "17 years" not in src and "Aditya" not in src)
+ck("reader.md is gitignored",
+   "reader.md" in open(os.path.join(os.path.dirname(HERE), ".gitignore")).read())
 
 # ============================================================== sources ===
 print("\nsources")

@@ -3,3 +3,6 @@
 data/
 __pycache__/
 *.pyc
+
+# Who the explainer writes for. Personal; see reader.example.md.
+reader.md

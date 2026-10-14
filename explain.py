@@ -20,7 +20,8 @@ import os
 import sys
 import time
 
-PROMPT_VERSION = 1
+BASE = os.path.dirname(os.path.abspath(__file__))
+PROMPT_VERSION = 2
 TIER = "sonnet"
 MAX_ITEMS = 18
 
@@ -42,12 +43,31 @@ def _client():
     return claude
 
 
-SYSTEM = """You explain one concept in AI to a senior infrastructure engineer.
+# Who the explanation is pitched at. Kept in a file rather than hardcoded here:
+# this repository is public, and an explainer tuned to one person's CV is both a
+# privacy question and worse software -- anyone cloning it would get answers
+# written for somebody else. Edit reader.md (gitignored) to make it yours.
+READER = os.path.join(BASE, "reader.md")
+DEFAULT_READER = """a senior software engineer with a decade of backend and
+infrastructure experience and some applied AI. Assume distributed systems, APIs,
+security and operations are second nature."""
 
-He has 17 years in enterprise storage, virtualisation and security compliance,
-and two years of applied AI. Assume distributed systems, APIs, security and
-operations are second nature. Do NOT explain what an LLM is. Do explain what is
-genuinely new or specific about this concept.
+
+def reader():
+    try:
+        with open(READER, encoding="utf-8") as fh:
+            t = fh.read().strip()
+            if t:
+                return t
+    except OSError:
+        pass
+    return DEFAULT_READER
+
+
+SYSTEM_TEMPLATE = """You explain one concept in AI to %s
+
+Do NOT explain what an LLM is. Do explain what is genuinely new or specific
+about this concept.
 
 You are given recent items from his feeds that mention it. Explain the concept
 AS THOSE ITEMS DISCUSS IT -- what people are actually doing with it right now,
@@ -61,12 +81,16 @@ Structure, in markdown, no preamble:
 **Why it exists** - the problem it solves, and what people did before.
 **Where it stands now** - what these items show is happening, with dates where
 the items give them. Name sources.
-**Worth his time?** - a direct verdict for someone whose lane is storage,
-security compliance and agentic systems. "Not yet, because..." is a fine answer.
+**Worth your time?** - a direct verdict for this reader specifically.
+"Not yet, because..." is a fine answer.
 **To try it** - one concrete first step, or say there is nothing to try yet.
 
 Rules: never invent a fact, a date, a version or a benchmark that is not in the
 items. Do not use the words "delve", "landscape", "revolutionise" or "unlock"."""
+
+
+def system_prompt():
+    return SYSTEM_TEMPLATE % reader()
 
 
 def _fingerprint(slug, item_ids):
@@ -115,7 +139,7 @@ def explain(con, slug, tier=None, force=False):
         # 8000, not 2000: the model reasons before it writes and that counts
         # against the cap. 2000 was hit on the first real run, with a ~600
         # token explainer as the actual output.
-        text, meta = claude.call(tier or TIER, SYSTEM, user, max_tokens=8000)
+        text, meta = claude.call(tier or TIER, system_prompt(), user, max_tokens=8000)
     except Exception as exc:
         raise ExplainUnavailable(str(exc)[:240]) from exc
 
